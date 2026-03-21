@@ -168,7 +168,88 @@ export default function HLSPlayer({ src }) {
 
 ---
 
-### 방법 E. 자막(Subtitle) 추가
+### 방법 E. Vue / Nuxt에 임베드
+
+```bash
+npm install hls.js
+```
+
+**Vue 3 컴포넌트 (`components/HLSPlayer.vue`)**
+```vue
+<template>
+  <video ref="videoRef" controls style="width: 100%" />
+</template>
+
+<script setup>
+import Hls from 'hls.js'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
+
+const props = defineProps({ src: String })
+const videoRef = ref(null)
+let hls = null
+
+onMounted(() => {
+  const video = videoRef.value
+  if (Hls.isSupported()) {
+    hls = new Hls()
+    hls.loadSource(props.src)
+    hls.attachMedia(video)
+  } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+    // Safari 네이티브 HLS
+    video.src = props.src
+  }
+})
+
+onBeforeUnmount(() => hls?.destroy())
+</script>
+```
+
+사용:
+```vue
+<HLSPlayer src="https://your-cdn.com/playlist.m3u8" />
+```
+
+**Nuxt 주의사항 — SSR에서 window 없음 오류 방지**
+
+Nuxt는 기본적으로 SSR이라 `hls.js`가 서버에서 실행되면 에러가 납니다. 아래 두 방법 중 하나를 사용하세요.
+
+방법 1 — `<ClientOnly>`로 감싸기 (가장 간단):
+```vue
+<ClientOnly>
+  <HLSPlayer src="..." />
+</ClientOnly>
+```
+
+방법 2 — `onMounted`에서 동적 import (컴포넌트 내부에서 처리):
+```vue
+<script setup>
+import { ref, onMounted, onBeforeUnmount } from 'vue'
+
+const props = defineProps({ src: String })
+const videoRef = ref(null)
+let hls = null
+
+onMounted(async () => {
+  const { default: Hls } = await import('hls.js')
+  const video = videoRef.value
+  if (Hls.isSupported()) {
+    hls = new Hls()
+    hls.loadSource(props.src)
+    hls.attachMedia(video)
+  } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+    video.src = props.src
+  }
+})
+
+onBeforeUnmount(() => hls?.destroy())
+</script>
+```
+
+> React(Next.js)와 난이도 차이 없음. Nuxt SSR 주의사항만 챙기면 동일하게 동작합니다.
+
+---
+
+### 방법 F. 자막(Subtitle) 추가
 
 `.vtt` 자막 파일을 m3u8에 포함:
 
