@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HLS Player - 예시</title>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <style>
+    body {
+      margin: 0;
+      background: #111;
+      color: #eee;
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+    }
+    h2 { margin-bottom: 16px; }
+    video {
+      width: 100%;
+      max-width: 960px;
+      border-radius: 8px;
+      background: #000;
+    }
+    .controls {
+      margin-top: 16px;
+      display: flex;
+      gap: 8px;
+    }
+    input {
+      width: 480px;
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1px solid #444;
+      background: #222;
+      color: #eee;
+      font-size: 14px;
+    }
+    button {
+      padding: 8px 20px;
+      border-radius: 6px;
+      border: none;
+      background: #3b82f6;
+      color: #fff;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    button:hover { background: #2563eb; }
+    .hint {
+      margin-top: 10px;
+      font-size: 12px;
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+  <h2>HLS 플레이어 예시</h2>
+  <video id="video" controls></video>
+
+  <div class="controls">
+    <input id="srcInput" type="text"
+      placeholder="playlist.m3u8 경로 또는 URL"
+      value="../output/playlist.m3u8" />
+    <button onclick="loadSrc()">재생</button>
+  </div>
+  <p class="hint">
+    로컬 파일: <code>../output/&lt;영상명&gt;/playlist.m3u8</code> |
+    CDN: <code>https://your-cdn.example.com/output/playlist.m3u8</code>
+  </p>
+
+  <script>
+    const video = document.getElementById('video');
+    let hls = null;
+
+    function loadSrc() {
+      const src = document.getElementById('srcInput').value.trim();
+      if (!src) return;
+
+      if (hls) {
+        hls.destroy();
+        hls = null;
+      }
+
+      if (Hls.isSupported()) {
+        hls = new Hls();
+        hls.loadSource(src);
+        hls.attachMedia(video);
+        hls.on(Hls.Events.MANIFEST_PARSED, () => video.play());
+        hls.on(Hls.Events.ERROR, (_, data) => {
+          if (data.fatal) console.error('HLS 오류:', data);
+        });
+      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = src;
+        video.play();
+      } else {
+        alert('이 브라우저는 HLS를 지원하지 않습니다.');
+      }
+    }
+
+    // 페이지 로드 시 기본값으로 자동 로드
+    loadSrc();
+  </script>
+</body>
+</html>

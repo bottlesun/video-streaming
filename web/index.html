@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HLS Player</title>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <style>
+    body {
+      margin: 0;
+      background: #111;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    video {
+      width: 100%;
+      max-width: 960px;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+  <video id="video" controls></video>
+
+  <script>
+    const video = document.getElementById('video');
+    // CDN URL 또는 로컬 경로로 변경하세요
+    const src = 'https://your-cdn.example.com/output/playlist.m3u8';
+
+    if (Hls.isSupported()) {
+      const hls = new Hls();
+      hls.loadSource(src);
+      hls.attachMedia(video);
+    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      // Safari 네이티브 HLS 지원
+      video.src = src;
+    } else {
+      console.error('HLS를 지원하지 않는 브라우저입니다.');
+    }
+  </script>
+</body>
+</html>
